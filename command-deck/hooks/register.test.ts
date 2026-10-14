@@ -1,13 +1,13 @@
 import { expect, mock, test } from 'claude-code/testing'
 import type { On } from 'claude-code/testing'
 
-import { bar, limitLabel, parseGit, span, tokens, tone } from './register'
+import { bar, limitLabel, parseGit, parsePort, span, tokens, tone } from './register'
 
 const NOW = 1_800_000_000_000
 
 const GIT = ['# branch.oid abc', '# branch.head extra/misc-work', '# branch.ab +2 -1', '1 .M N... 100644 100644 100644 a b src/x.ts', '? notes.txt', ''].join('\n')
 
-function world(on: On, opts: { git?: string; isGitFailing?: boolean; limits?: { kind: string; percentUsed: number; resetsAt?: string }[] } = {}) {
+function world(on: On, opts: { git?: string; isGitFailing?: boolean; pkg?: object; isDevUp?: boolean; remote?: string; limits?: { kind: string; percentUsed: number; resetsAt?: string }[] } = {}) {
   const seen = { commands: [] as string[], toasts: [] as string[] }
   mock.store(on)
   mock.clock(on, { now: NOW })
@@ -26,9 +26,12 @@ function world(on: On, opts: { git?: string; isGitFailing?: boolean; limits?: { 
       cost: { usd: 0.2 },
     },
   }) as never)
-  on('process.run', () =>
-    (opts.isGitFailing ? { value: { exitCode: 128, stdout: '', stderr: 'not a repo' } } : { value: { exitCode: 0, stdout: opts.git ?? GIT, stderr: '' } }) as never,
-  )
+  on('fs.read', () => (opts.pkg ? { value: JSON.stringify(opts.pkg) } : { deny: 'no such file' }) as never)
+  on('process.run', (_$, e) => {
+    if (e.argv[1] === 'remote') return { value: { exitCode: 0, stdout: `${opts.remote ?? 'https://github.com/example/my-app.git'}\n`, stderr: '' } } as never
+    if (e.argv[0] === 'curl') return { value: opts.isDevUp ? { exitCode: 0, stdout: 'HTTP/1.1 200 OK\n\n200', stderr: '' } : { exitCode: 7, stdout: '\n000', stderr: '' } } as never
+    return (opts.isGitFailing ? { value: { exitCode: 128, stdout: '', stderr: 'not a repo' } } : { value: { exitCode: 0, stdout: opts.git ?? GIT, stderr: '' } }) as never
+  })
   on('ui.toast', (_$, e) => {
     seen.toasts.push(String((e as { text?: unknown }).text ?? e))
     return { value: undefined } as never
@@ -107,6 +110,14 @@ test('the mod chips run their commands', async ($, on) => {
   await ui.unmount()
 })
 
+test('the Issues chip shows only for GitHub repos', async ($, on) => {
+  world(on, { remote: 'https://gitlab.com/example/my-app.git' })
+  await start($)
+  const ui = await band($, 'desktop', 140)
+  expect(await ui.find({ key: 'issues' })).toBeUndefined()
+  await ui.unmount()
+})
+
 test('collapse to one line and back', async ($, on) => {
   world(on)
   await start($)
@@ -125,6 +136,39 @@ test('a limit near its cap warns once', async ($, on) => {
   await $.turn.complete({ reason: 'end_turn', answer: 'done' } as never)
   await new Promise(r => setTimeout(r, 30))
   expect(seen.toasts.length).toBe(1)
+})
+
+test('finding the dev port', () => {
+  expect(parsePort('next dev -p 9002')).toBe(9002)
+  expect(parsePort('vite --port=5173')).toBe(5173)
+  expect(parsePort('cross-env PORT=3001 node server.js')).toBe(3001)
+  expect(parsePort('next dev')).toBeNull()
+  expect(parsePort(undefined)).toBeNull()
+})
+
+test('the version and dev server show next to the folder', async ($, on) => {
+  world(on, { pkg: { version: '1.2.3', scripts: { dev: 'next dev -p 9002' } } })
+  await start($)
+  const ui = await band($, 'desktop', 140)
+  expect(await ui.find({ text: /my-app v1\.2\.3/ })).toBeDefined()
+  expect(await ui.find({ text: /dev :9002 down/ })).toBeDefined()
+  await ui.unmount()
+})
+
+test('a running dev server shows as up', async ($, on) => {
+  world(on, { pkg: { version: '1.2.3', scripts: { dev: 'next dev -p 9002' } }, isDevUp: true })
+  await start($)
+  const ui = await band($, 'desktop', 140)
+  expect(await ui.find({ text: /dev :9002 up/ })).toBeDefined()
+  await ui.unmount()
+})
+
+test('without a dev port no server status shows', async ($, on) => {
+  world(on, { pkg: { version: '1.2.3' } })
+  await start($)
+  const ui = await band($, 'desktop', 140)
+  expect(await ui.find({ text: /dev :/ })).toBeUndefined()
+  await ui.unmount()
 })
 
 test('without git the deck still draws', async ($, on) => {

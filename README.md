@@ -28,6 +28,6 @@ Install any of the others the same way (`github-issues@claude-mods`, `prompt-upg
 
 ## Requirements
 
-- **command-deck**: `git` on your PATH for the git meter (it shows nothing in folders that aren't repos).
+- **command-deck**: `git` on your PATH for the git meter (it shows nothing in folders that aren't repos), and `curl` for the dev-server status (shown when the project's `dev` script names a port).
 - **github-issues**: the [GitHub CLI](https://cli.github.com/) (`gh`), signed in with `gh auth login`.
 - **prompt-upgrade**, **auto-model**: nothing extra.

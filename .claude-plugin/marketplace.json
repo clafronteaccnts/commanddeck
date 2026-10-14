@@ -7,7 +7,7 @@
       "name": "command-deck",
       "source": "./command-deck",
       "description": "One band above the prompt: session, git, context and plan-limit meters, cost, and your mods, model and effort controls.",
-      "version": "0.1.0"
+      "version": "0.2.0"
     },
     {
       "name": "github-issues",

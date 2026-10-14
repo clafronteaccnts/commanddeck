@@ -95,6 +95,14 @@ export function limitLabel(kind: string): string {
   return kind.replace(/_/g, ' ').toUpperCase().slice(0, 10)
 }
 
+// The port a project's `dev` script serves on: `-p 9002`, `--port=9002`, `PORT=9002` and the like.
+export function parsePort(script: unknown): number | null {
+  if (typeof script !== 'string') return null
+  const m = /(?:--port[= ]|-p[= ]?|\bPORT=)(\d{2,5})\b/.exec(script)
+  const port = m ? Number(m[1]) : NaN
+  return port > 0 && port < 65536 ? port : null
+}
+
 function modelLabel(id: string): string {
   const m = /(haiku|sonnet|opus|fable)-(\d+)-(\d+)/i.exec(id)
   if (!m) return id.toUpperCase()
@@ -121,6 +129,33 @@ async function refresh($: Engine): Promise<void> {
     } catch {
       // not a git folder, or git is missing
     }
+    let isGitHub = false
+    if (git.branch !== null) {
+      try {
+        const r = await $.process.run(['git', 'remote', 'get-url', 'origin'], { cwd, timeoutMs: 5000 })
+        isGitHub = r.exitCode === 0 && /github\.com[:/]/i.test(r.stdout)
+      } catch {
+        // no origin remote
+      }
+    }
+    let version: string | null = null
+    let devPort: number | null = null
+    try {
+      const pkg = JSON.parse(await $.fs.read(`${cwd.replace(/[\\/]+$/, '')}/package.json`))
+      if (typeof pkg.version === 'string') version = pkg.version
+      devPort = parsePort(pkg.scripts?.dev)
+    } catch {
+      // no package.json, or it is not valid JSON
+    }
+    let isDevUp: boolean | null = null
+    if (devPort !== null) {
+      try {
+        const r = await $.process.run(['curl', '-s', '-I', '-m', '2', '-w', '\n%{http_code}', `http://localhost:${devPort}`], { cwd, timeoutMs: 5000 })
+        isDevUp = r.stdout.trim().split('\n').pop()?.trim() !== '000' && r.exitCode === 0
+      } catch {
+        isDevUp = false
+      }
+    }
     const limits: Limit[] = usage.rateLimits.map(l => ({
       kind: l.kind,
       percent: l.percentUsed,
@@ -129,6 +164,10 @@ async function refresh($: Engine): Promise<void> {
     const next: Snapshot = {
       now,
       folder: cwd.replace(/[\\/]+$/, '').split(/[\\/]/).pop() ?? cwd,
+      version,
+      isGitHub,
+      devPort,
+      isDevUp,
       branch: git.branch,
       changed: git.changed,
       ahead: git.ahead,
@@ -224,7 +263,6 @@ export const register: Register = on => {
     const f = await read($, effort)
     const isAuto = await read($, autoModelIsOn)
     const isArmed = await read($, upgradeIsArmed)
-    const isRewards = (s?.folder ?? '').toLowerCase() === 'rewardsoptimizer'
 
     const chip = (key: string, label: string, onPress: () => void, isActive = false, dot?: string) => (
       <Button key={key} plain onPress={onPress}>
@@ -303,12 +341,15 @@ export const register: Register = on => {
 
     if (s !== null) {
       const where = [
-        s.folder,
+        s.version ? `${s.folder} v${s.version}` : s.folder,
         s.branch ? `⎇ ${s.branch}` : '',
         s.changed != null ? `● ${s.changed} changed` : '',
         s.ahead > 0 ? `↑${s.ahead}` : '',
         s.behind > 0 ? `↓${s.behind}` : '',
       ].filter(Boolean).join('  ')
+      const dev = s.devPort !== null ? (
+        <Text key="dev" color={s.isDevUp ? GREEN : RED} wrap="truncate">{`  dev :${s.devPort} ${s.isDevUp ? 'up' : 'down'}`}</Text>
+      ) : null
       const session = [
         span(s.now - s.startedAt),
         `${s.prompts} prompt${s.prompts === 1 ? '' : 's'}`,
@@ -316,7 +357,7 @@ export const register: Register = on => {
       ].filter(Boolean).join(' · ')
       rows.push(
         <Box key="where" flexDirection="row" justifyContent="space-between" width={cols}>
-          <Box flexShrink={1}><Text color={TEXT} wrap="truncate">{where}</Text></Box>
+          <Box flexShrink={1} flexDirection="row"><Text color={TEXT} wrap="truncate">{where}</Text>{dev}</Box>
           <Box flexShrink={0}>{dim(`  ${session}`)}</Box>
         </Box>,
       )
@@ -341,7 +382,7 @@ export const register: Register = on => {
     rows.push(
       <Box key="mods" flexDirection="row" justifyContent="space-between" width={cols}>
         <Box flexDirection="row" gap={1} flexShrink={0}>
-          {isRewards && chip('issues', 'Issues', () => void $.command.run({ command: 'issues' }))}
+          {s?.isGitHub && chip('issues', 'Issues', () => void $.command.run({ command: 'issues' }))}
           {chip('better', isArmed ? 'Prompt Upgrade · armed' : 'Prompt Upgrade', () => void $.command.run({ command: 'better', args: 'arm' }), isArmed)}
           {chip('automodel', isAuto ? 'Auto Model · on' : 'Auto Model', () => void $.command.run({ command: 'automodel', args: 'toggle' }), isAuto, isAuto ? DARK : undefined)}
         </Box>

@@ -3,6 +3,10 @@ export type Limit = { kind: string; percent: number; resetsAt: number | null }
 export type Snapshot = {
   now: number
   folder: string
+  version: string | null
+  isGitHub: boolean
+  devPort: number | null
+  isDevUp: boolean | null
   branch: string | null
   changed: number | null
   ahead: number
