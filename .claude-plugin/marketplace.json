@@ -1,0 +1,31 @@
+{
+  "name": "claude-mods",
+  "owner": { "name": "clafronteaccnts" },
+  "metadata": { "description": "Mods for Claude Code: a command deck, a GitHub issues pane, a prompt upgrader and automatic model selection." },
+  "plugins": [
+    {
+      "name": "command-deck",
+      "source": "./command-deck",
+      "description": "One band above the prompt: session, git, context and plan-limit meters, cost, and your mods, model and effort controls.",
+      "version": "0.1.0"
+    },
+    {
+      "name": "github-issues",
+      "source": "./github-issues",
+      "description": "A /issues pane listing the repo's open GitHub issues; click one to open it, or send it to the prompt.",
+      "version": "0.1.0"
+    },
+    {
+      "name": "prompt-upgrade",
+      "source": "./prompt-upgrade",
+      "description": "Turns a rough prompt into a better one before it is sent: a few quick questions, a rewrite, and a side-by-side review.",
+      "version": "0.1.0"
+    },
+    {
+      "name": "auto-model",
+      "source": "./auto-model",
+      "description": "Picks the right model for each prompt you type, quietly, when switched on.",
+      "version": "0.1.0"
+    }
+  ]
+}

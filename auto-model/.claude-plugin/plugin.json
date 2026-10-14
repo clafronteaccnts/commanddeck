@@ -1,0 +1,1 @@
+{ "name": "auto-model", "version": "0.1.0", "description": "Picks the right model for each prompt you type, quietly, when switched on.", "types": "./types/index.d.ts" }

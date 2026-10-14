@@ -1,0 +1,1 @@
+{ "name": "github-issues", "version": "0.1.0", "description": "A /issues pane listing the repo's open GitHub issues; click one to open it, or send it to the prompt.", "types": "./types/index.d.ts" }
