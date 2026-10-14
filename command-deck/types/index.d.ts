@@ -4,6 +4,7 @@ export type Snapshot = {
   now: number
   folder: string
   version: string | null
+  commands: string[]
   isGitHub: boolean
   devPort: number | null
   isDevUp: boolean | null

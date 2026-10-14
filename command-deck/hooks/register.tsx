@@ -129,6 +129,12 @@ async function refresh($: Engine): Promise<void> {
     } catch {
       // not a git folder, or git is missing
     }
+    let commands: string[] = []
+    try {
+      commands = (await $.command.list()).map(c => c.name)
+    } catch {
+      // show no mod chips until the list is available
+    }
     let isGitHub = false
     if (git.branch !== null) {
       try {
@@ -165,6 +171,7 @@ async function refresh($: Engine): Promise<void> {
       now,
       folder: cwd.replace(/[\\/]+$/, '').split(/[\\/]/).pop() ?? cwd,
       version,
+      commands,
       isGitHub,
       devPort,
       isDevUp,
@@ -263,6 +270,9 @@ export const register: Register = on => {
     const f = await read($, effort)
     const isAuto = await read($, autoModelIsOn)
     const isArmed = await read($, upgradeIsArmed)
+
+    // A chip only shows when the mod that serves its command is installed.
+    const has = (name: string) => (s?.commands ?? []).some(c => c === name || c.endsWith(`:${name}`))
 
     const chip = (key: string, label: string, onPress: () => void, isActive = false, dot?: string) => (
       <Button key={key} plain onPress={onPress}>
@@ -382,9 +392,9 @@ export const register: Register = on => {
     rows.push(
       <Box key="mods" flexDirection="row" justifyContent="space-between" width={cols}>
         <Box flexDirection="row" gap={1} flexShrink={0}>
-          {s?.isGitHub && chip('issues', 'Issues', () => void $.command.run({ command: 'issues' }))}
-          {chip('better', isArmed ? 'Prompt Upgrade · armed' : 'Prompt Upgrade', () => void $.command.run({ command: 'better', args: 'arm' }), isArmed)}
-          {chip('automodel', isAuto ? 'Auto Model · on' : 'Auto Model', () => void $.command.run({ command: 'automodel', args: 'toggle' }), isAuto, isAuto ? DARK : undefined)}
+          {s?.isGitHub && has('issues') && chip('issues', 'Issues', () => void $.command.run({ command: 'issues' }))}
+          {has('better') && chip('better',isArmed ? 'Prompt Upgrade · armed' : 'Prompt Upgrade', () => void $.command.run({ command: 'better', args: 'arm' }), isArmed)}
+          {has('automodel') && chip('automodel',isAuto ? 'Auto Model · on' : 'Auto Model', () => void $.command.run({ command: 'automodel', args: 'toggle' }), isAuto, isAuto ? DARK : undefined)}
         </Box>
         <Box flexDirection="row" gap={1} flexShrink={0}>
           <Select

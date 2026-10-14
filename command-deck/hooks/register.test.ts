@@ -7,11 +7,12 @@ const NOW = 1_800_000_000_000
 
 const GIT = ['# branch.oid abc', '# branch.head extra/misc-work', '# branch.ab +2 -1', '1 .M N... 100644 100644 100644 a b src/x.ts', '? notes.txt', ''].join('\n')
 
-function world(on: On, opts: { git?: string; isGitFailing?: boolean; pkg?: object; isDevUp?: boolean; remote?: string; limits?: { kind: string; percentUsed: number; resetsAt?: string }[] } = {}) {
+function world(on: On, opts: { git?: string; isGitFailing?: boolean; pkg?: object; isDevUp?: boolean; remote?: string; commands?: string[]; limits?: { kind: string; percentUsed: number; resetsAt?: string }[] } = {}) {
   const seen = { commands: [] as string[], toasts: [] as string[] }
   mock.store(on)
   mock.clock(on, { now: NOW })
   on('command.register', () => ({ value: {} }) as never)
+  on('command.list', () => ({ value: (opts.commands ?? ['issues', 'better', 'automodel']).map(name => ({ name, description: '', source: 'plugin' })) }) as never)
   on('session.cwd', () => ({ value: 'C:\\work\\my-app' }) as never)
   on('session.model', () => ({ value: 'claude-sonnet-5-5' }) as never)
   on('session.turns', () => ({ value: 3 }) as never)
@@ -115,6 +116,16 @@ test('the Issues chip shows only for GitHub repos', async ($, on) => {
   await start($)
   const ui = await band($, 'desktop', 140)
   expect(await ui.find({ key: 'issues' })).toBeUndefined()
+  await ui.unmount()
+})
+
+test('chips for mods that are not installed do not appear', async ($, on) => {
+  world(on, { commands: ['better'] })
+  await start($)
+  const ui = await band($, 'desktop', 140)
+  expect(await ui.find({ key: 'better' })).toBeDefined()
+  expect(await ui.find({ key: 'issues' })).toBeUndefined()
+  expect(await ui.find({ key: 'automodel' })).toBeUndefined()
   await ui.unmount()
 })
 
