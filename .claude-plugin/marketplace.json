@@ -1,5 +1,5 @@
 {
-  "name": "claude-mods",
+  "name": "commanddeck",
   "owner": { "name": "clafronteaccnts" },
   "metadata": { "description": "Mods for Claude Code: a command deck, a GitHub issues pane, a prompt upgrader and automatic model selection." },
   "plugins": [

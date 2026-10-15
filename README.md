@@ -1,4 +1,4 @@
-# claude-mods
+# commanddeck
 
 Mods for [Claude Code](https://claude.com/claude-code), installable on any machine (Windows, macOS, Linux) with no paths to configure.
 
@@ -14,16 +14,16 @@ Mods for [Claude Code](https://claude.com/claude-code), installable on any machi
 In Claude Code:
 
 ```
-/plugin marketplace add clafronteaccnts/claude-mods
-/plugin install command-deck@claude-mods
+/plugin marketplace add clafronteaccnts/commanddeck
+/plugin install command-deck@commanddeck
 ```
 
-Install any of the others the same way (`github-issues@claude-mods`, `prompt-upgrade@claude-mods`, `auto-model@claude-mods`), then restart Claude Code.
+Install any of the others the same way (`github-issues@commanddeck`, `prompt-upgrade@commanddeck`, `auto-model@commanddeck`), then restart Claude Code.
 
 ## Update
 
 ```
-/plugin marketplace update claude-mods
+/plugin marketplace update commanddeck
 ```
 
 ## Requirements
