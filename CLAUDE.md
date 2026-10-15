@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-This repo is a Claude Code plugin marketplace (`commanddeck`) holding four mods: `command-deck`, `github-issues`, `prompt-upgrade` and `auto-model`. It is public on GitHub (`clafronteaccnts/commanddeck`). Other people install from it, so treat every change as published once pushed.
+This repo is a Claude Code plugin marketplace (`commanddeck`) holding five mods: `command-deck`, `github-issues`, `prompt-upgrade`, `auto-model` and `dev-server`. It is public on GitHub (`clafronteaccnts/commanddeck`). Other people install from it, so treat every change as published once pushed.
 
 ## Layout
 

@@ -1,0 +1,1 @@
+{ "name": "dev-server", "version": "0.1.0", "description": "A /dev command and pane that start, stop and restart the project's dev server (its package.json dev script) and show its output.", "types": "./types/index.d.ts" }

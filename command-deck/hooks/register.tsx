@@ -393,6 +393,7 @@ export const register: Register = on => {
       <Box key="mods" flexDirection="row" justifyContent="space-between" width={cols}>
         <Box flexDirection="row" gap={1} flexShrink={0}>
           {s?.isGitHub && has('issues') && chip('issues', 'Issues', () => void $.command.run({ command: 'issues' }))}
+          {has('dev') && s?.devPort != null && chip('dev', s.isDevUp ? 'Stop dev' : 'Start dev', () => void $.command.run({ command: 'dev', args: s.isDevUp ? 'stop' : 'start' }), s.isDevUp === true)}
           {has('better') && chip('better',isArmed ? 'Prompt Upgrade · armed' : 'Prompt Upgrade', () => void $.command.run({ command: 'better', args: 'arm' }), isArmed)}
           {has('automodel') && chip('automodel',isAuto ? 'Auto Model · on' : 'Auto Model', () => void $.command.run({ command: 'automodel', args: 'toggle' }), isAuto, isAuto ? DARK : undefined)}
         </Box>

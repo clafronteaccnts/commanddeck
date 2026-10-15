@@ -111,6 +111,42 @@ test('the mod chips run their commands', async ($, on) => {
   await ui.unmount()
 })
 
+const DEV_PKG = { version: '1.2.3', scripts: { dev: 'next dev -p 9002' } }
+
+test('the dev chip starts a stopped dev server', async ($, on) => {
+  const seen = world(on, { pkg: DEV_PKG, commands: ['dev'] })
+  await start($)
+  const ui = await band($, 'desktop', 140)
+  await ui.press({ key: 'dev' })
+  expect(seen.commands).toEqual(['dev start'])
+  await ui.unmount()
+})
+
+test('the dev chip stops a running dev server', async ($, on) => {
+  const seen = world(on, { pkg: DEV_PKG, commands: ['dev'], isDevUp: true })
+  await start($)
+  const ui = await band($, 'desktop', 140)
+  await ui.press({ key: 'dev' })
+  expect(seen.commands).toEqual(['dev stop'])
+  await ui.unmount()
+})
+
+test('the dev chip is hidden without the dev-server mod', async ($, on) => {
+  world(on, { pkg: DEV_PKG, commands: ['better'] })
+  await start($)
+  const ui = await band($, 'desktop', 140)
+  expect(await ui.find({ key: 'dev' })).toBeUndefined()
+  await ui.unmount()
+})
+
+test('the dev chip is hidden when the project has no dev port', async ($, on) => {
+  world(on, { pkg: { version: '1.2.3' }, commands: ['dev'] })
+  await start($)
+  const ui = await band($, 'desktop', 140)
+  expect(await ui.find({ key: 'dev' })).toBeUndefined()
+  await ui.unmount()
+})
+
 test('the Issues chip shows only for GitHub repos', async ($, on) => {
   world(on, { remote: 'https://gitlab.com/example/my-app.git' })
   await start($)

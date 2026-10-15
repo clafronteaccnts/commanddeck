@@ -1,1 +1,1 @@
-{ "name": "command-deck", "version": "0.2.1", "description": "One band above the prompt: session, git, context and plan-limit meters, cost, and your mods, model and effort controls.", "types": "./types/index.d.ts" }
+{ "name": "command-deck", "version": "0.3.0", "description": "One band above the prompt: session, git, context and plan-limit meters, cost, and your mods, model and effort controls.", "types": "./types/index.d.ts" }
